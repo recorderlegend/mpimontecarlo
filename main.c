@@ -7,13 +7,14 @@
 double f(double x);
 double montecarlo(double a, double b, int iterations);
 
+// Inspired by Pacheco's Parallel Processing algorithm for trapezoid integration
 int main(int argc, char **argv)
 {
     int rank, world;
     int n, local_n;          // number of iterations, number of iterations per process
-    n = 200;
+    n = 1000;
     double local_int, total_int;
-    double a = 1.0, b = 5.0; // start and end of integral
+    double a = 0.0, b = 5.0; // start and end of integral
     double dx;               // change in x
     double local_a, local_b;
     int source;
@@ -46,34 +47,27 @@ int main(int argc, char **argv)
 
 double f(double x)
 {
-	return pow(x,4) * exp(-x);
+	return pow(x,3);
 }
 
-double montecarlo(double a, double b, int iterations){
+double montecarlo(double a, double b, int iterations)
+{
     time_t t;
     srand((unsigned)time(&t));
-    double totalSum = 0;
-    double randNum, functionVal;
-
-    int iter = 0;
-
-    while (iter < iterations - 1)
+    double sum = 0;
+    double random, fval;
+    int curit = 0;
+    while (curit < iterations - 1)
     {
-
         // Select a random number within the limits of integration
         float ran = (float)(rand());
-        randNum = a + (ran / RAND_MAX) * (b - a);
-
+        random = a + (ran / RAND_MAX) * (b - a);
         // Sample the function's values
-        functionVal = f(randNum);
-
+        fval = f(random);
         // Add the f(x) value to the running sum
-        totalSum += functionVal;
-
-        iter++;
+        sum += fval;
+        curit++;
     }
-
-    double estimate = (b - a) * totalSum / iterations;
-
+    double estimate = (b - a) * sum / iterations;
     return estimate;
 }
