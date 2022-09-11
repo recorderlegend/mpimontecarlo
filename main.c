@@ -12,15 +12,21 @@ int main(int argc, char **argv)
 {
     int rank, world;
     int n, local_n;          // number of iterations, number of iterations per process
-    n = 1000;
+    n = 10000;
     double local_int, total_int;
     double a = 0.0, b = 5.0; // start and end of integral
     double dx;               // change in x
     double local_a, local_b;
     int source;
+    double startwtime = 0.0, endwtime;
     MPI_Init(NULL, NULL);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &world);
+
+    if(rank == 0){
+        startwtime = MPI_Wtime();
+    }
+
     dx = (b-a)/n;
     local_n = n/world; //amount of iterations each process(world) handles
     local_a = a + rank*local_n*dx; // start of integral + (rank# * number of iterations * change in x)
@@ -40,6 +46,11 @@ int main(int argc, char **argv)
             total_int += local_int;
         }
         printf("total integral: %f\n", total_int);
+    }
+    if(rank == 0){
+        // end timer
+        endwtime = MPI_Wtime();
+        printf("wall clock: %lf\n", endwtime-startwtime);
     }
     MPI_Finalize();
 
