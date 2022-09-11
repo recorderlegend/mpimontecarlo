@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 {
     int rank, world;
     int n, local_n;          // number of iterations, number of iterations per process
-    n = 10000;
+    n = 10000000;
     double local_int, total_int;
     double a = 0.0, b = 5.0; // start and end of integral
     double dx;               // change in x
@@ -27,26 +27,39 @@ int main(int argc, char **argv)
         startwtime = MPI_Wtime();
     }
 
+
+    MPI_Bcast(&a, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&b, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
     dx = (b-a)/n;
     local_n = n/world; //amount of iterations each process(world) handles
+    
+    
     local_a = a + rank*local_n*dx; // start of integral + (rank# * number of iterations * change in x)
     local_b = local_a + local_n*dx; //locala +(number of iterations * change in x)
     local_int = montecarlo(local_a, local_b, local_n); // run monte carlo
     printf("n: %d | a: %f | b: %f | montecarlo val: %f \n", local_n, local_a, local_b, local_int); // debug print
-    if (rank != 0)
-    {
-        MPI_Send(&local_int, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-    }
-    else
-    {
-        total_int = local_int;
-        for (source = 1; source < world; source++)
-        {
-            MPI_Recv(&local_int, 1, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            total_int += local_int;
-        }
-        printf("total integral: %f\n", total_int);
-    }
+
+    
+    // if (rank != 0)
+    // {
+    //     MPI_Send(&local_int, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+    // }
+    // else
+    // {
+    //     total_int = local_int;
+    //     for (source = 1; source < world; source++)
+    //     {
+    //         MPI_Recv(&local_int, 1, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    //         total_int += local_int;
+    //     }
+    //     printf("total integral: %f\n", total_int);
+    // }
+
+    MPI_Reduce(&local_int, &total_int, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+
+
     if(rank == 0){
         // end timer
         endwtime = MPI_Wtime();
